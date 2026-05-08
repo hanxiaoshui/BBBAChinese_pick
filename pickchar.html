@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<title>Chinese Character Finder</title>
+
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    margin: 0;
+    padding: 16px;
+    background: #f5f5f5;
+  }
+
+  h1 {
+    margin-top: 0;
+    font-size: 28px;
+  }
+
+  .controls {
+    background: white;
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+
+  .controls label {
+    display: block;
+    margin-top: 12px;
+    font-weight: 600;
+  }
+
+  .controls input {
+    width: 100%;
+    padding: 10px;
+    font-size: 18px;
+    margin-top: 4px;
+    box-sizing: border-box;
+  }
+
+  button {
+    margin-top: 16px;
+    width: 100%;
+    padding: 14px;
+    font-size: 20px;
+    border: none;
+    border-radius: 12px;
+    background: #007aff;
+    color: white;
+  }
+
+  #targetDisplay {
+    margin-top: 12px;
+    font-size: 20px;
+    font-weight: bold;
+  }
+
+  .grid {
+    display: grid;
+    gap: 6px;
+  }
+
+  .cell {
+    background: white;
+    border-radius: 10px;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    user-select: none;
+    cursor: pointer;
+    transition: 0.15s;
+  }
+
+  .cell.correct {
+    background: #4cd964;
+    color: white;
+  }
+
+  .cell.wrong {
+    background: #ff3b30;
+    color: white;
+  }
+
+  #status {
+    margin-top: 16px;
+    font-size: 22px;
+    font-weight: bold;
+  }
+</style>
+</head>
+
+<body>
+
+<h1>Chinese Character Finder</h1>
+
+<div class="controls">
+  <label>Rows</label>
+  <input id="rows" type="number" value="6" min="1" max="20" />
+
+  <label>Columns</label>
+  <input id="cols" type="number" value="6" min="1" max="20" />
+
+  <label>Top N Characters</label>
+  <input id="topN" type="number" value="100" min="10" max="1000" />
+
+  <label>Target Characters</label>
+  <input id="targets" type="text" value="水火山" />
+
+  <button onclick="generateGrid()">Generate Grid</button>
+
+  <div id="targetDisplay"></div>
+</div>
+
+<div id="grid" class="grid"></div>
+
+<div id="status"></div>
+
+<script>
+  // Most common Chinese characters
+  const commonChars =
+    "的一是在不了有人我他这中大来上国个到说们为子和你地出道也时年得就那要下以生会自着去之过家学对可她里后小么心多天而能好都然没日于起还发成事只作当想看文无开手十用主行方又如前所本见经头面公同三已老从动两长知民样现分将外进高定";
+
+  let remainingTargets = new Set();
+
+  function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+  }
+
+  function generateGrid() {
+    const rows = parseInt(document.getElementById("rows").value);
+    const cols = parseInt(document.getElementById("cols").value);
+    const topN = parseInt(document.getElementById("topN").value);
+    const targetsInput = document.getElementById("targets").value;
+
+    const targets = [...new Set(targetsInput.split(""))];
+
+    remainingTargets = new Set(targets);
+
+    document.getElementById("targetDisplay").innerHTML =
+      "Find: " + targets.join(" ");
+
+    document.getElementById("status").innerHTML =
+      "Remaining: " + [...remainingTargets].join(" ");
+
+    const chars = commonChars.slice(0, topN);
+
+    const total = rows * cols;
+
+    let cells = [];
+
+    // Ensure targets appear
+    for (const t of targets) {
+      cells.push(t);
+    }
+
+    // Fill remaining cells
+    while (cells.length < total) {
+      const randChar =
+        chars[Math.floor(Math.random() * chars.length)];
+
+      cells.push(randChar);
+    }
+
+    // Shuffle
+    shuffle(cells);
+
+    // Render grid
+    const grid = document.getElementById("grid");
+    grid.innerHTML = "";
+
+    grid.style.gridTemplateColumns =
+      `repeat(${cols}, 1fr)`;
+
+    cells.forEach(ch => {
+      const div = document.createElement("div");
+      div.className = "cell";
+      div.innerText = ch;
+
+      div.onclick = () => {
+        if (remainingTargets.has(ch)) {
+          div.classList.add("correct");
+
+          remainingTargets.delete(ch);
+
+          document.getElementById("status").innerHTML =
+            remainingTargets.size > 0
+              ? "Remaining: " + [...remainingTargets].join(" ")
+              : "🎉 All Found!";
+        } else {
+          div.classList.add("wrong");
+
+          setTimeout(() => {
+            div.classList.remove("wrong");
+          }, 300);
+        }
+      };
+
+      grid.appendChild(div);
+    });
+  }
+
+  generateGrid();
+</script>
+
+</body>
+</html>
